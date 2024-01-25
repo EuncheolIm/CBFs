@@ -279,25 +279,78 @@ void CController::reset_target(double motion_time, Vector3d target_pos, Vector3d
 VectorXd CController::VirtualTank(VectorXd xdot, VectorXd xdot_des, Eigen::Matrix<double, 6, 1> force_ext, 
 													Eigen::Matrix<double, 6, 1> force_ref, Vector3d cal_gamma)
 {
-	_E_t = pow(_state_x,2) / 2;
-	_Power_in(0) = -xdot.transpose()*force_ref;
-	_Power_in(1) = -xdot_des.transpose()*force_ref;
-	_Power_in(2) = -xdot_des.transpose()*force_ext;
 
-	// cout << _Power_in.transpose()<<endl;
-	_P_total = cal_gamma.transpose()*_Power_in;
-	_state_xdot = _P_total/_state_x; 
+
+	// Compare with total stroage function and vitual energy tank energy
+	_storage_input1_flow = xdot.transpose() * force_ref;
+	_storage_input2_flow = xdot_des.transpose() * -force_ref;	
+	_storage_input3_flow = xdot_des.transpose() * -force_ext;	
+	_Total_storage_flow = _storage_input1_flow + _storage_input2_flow + _storage_input3_flow;
+	//
+
+	_Power_in(0) = xdot.transpose() * force_ref;				// Port 1
+	_Power_in(1) = xdot_des.transpose() * -force_ref;			// Port 2
+	_Power_in(2) = xdot_des.transpose() * -force_ext;			// Port 3
+
+	_Power_t = _Power_in;
+	// cout << _Power_in.transpose()<<endl;					// Sum all of Port (1,2,3)
+	// _P_total = cal_gamma.transpose()*_Power_t;
+	// _state_xdot = _P_total/_state_x; 
+	// _state_x = _state_x + _state_xdot*_dt;
+
+	_P_total = _Power_t(0) + _Power_t(1) + _Power_t(2);
+	cout << "_P_total: "<<_P_total<<endl;
+	cout << "_E_t: "<<_E_t<<endl;
+	// set gamma
+	if(_P_total <= 0)
+	{
+		gamma = 1;
+	}
+	else{ gamma = 0;}
+	// set beta
+	if(_E_t < _E_up)
+	{
+		beta = 1;
+	}
+	else{beta = 0;}
+	// set alpha
+	if(_E_low + E_threshold <= _E_t)
+	{
+		alpha = 1;
+	}
+	else if( _E_low <= _E_t && _E_t <= _E_low + E_threshold)
+	{	
+		cos_var = PI * (_E_t-_E_low)/E_threshold;
+		alpha = (1-cos(cos_var))/2;
+	}
+	else {alpha = 0;}
+
+	_state_xdot = (alpha/_state_x)*(gamma-1)*_P_total - (beta/_state_x)*gamma*_P_total;
 	_state_x = _state_x + _state_xdot*_dt;
 
-	_input = xdot_des;
-	for(int i=0; i<3; i++)
-    {
-        if (_Power_in(i) < 0){
-            _input(i) = cal_gamma(i)*_input(i);
+	cout << "alpha: "<<alpha<< "   beta: "<< beta<< "  gamma:  "<< gamma<<endl;
+	cout << "_state_x: "<<_state_x<< "   _state_xdot: "<< _state_xdot<<endl;
 
-        }
-        else{_input(i) = _input(i); }
-    }
+	_E_t = pow(_state_x,2) / 2; 								// _E_t is Tank dynamics == Tank energy
+
+	if(_Total_storage_flow <= _E_t)
+	{
+		_input = xdot_des;
+	}
+	else { _input.setZero(); }
+
+	cout << "_E_t: "<<_E_t<< "   _Total_storage_flow: "<< _Total_storage_flow<<endl;
+
+	// _input = xdot_des;
+	// for(int i=0; i<3; i++)
+    // {
+    //     if (_Power_in(i) < 0){
+	// 		for (int j=0; j<7; j++){
+    //         	_input(j) = cal_gamma(i)*_input(j);
+	// 		}
+    //     }
+    //     else{_input = _input; }
+    // }
 
 	return	_input;
 }
@@ -412,33 +465,15 @@ void CController::OperationalSpaceControl()
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////
 
-	// _modify_xdot_des_hands = VirtualTank(_xdot_hand, _xdot_des_hand, _FTdata, CustomMath::pseudoInverseQR(_J_T_hands.transpose())*_torque, _gamma);
-	// _gamma = ValveGainScheduler(_Power_in, _P_total, _E_t);
-
-	// _modify_x_des_hands = _x_hand + _modify_xdot_des_hands * _dt;
-
-	// _m_R_des_hand = CustomMath::GetBodyRotationMatrix(_modify_xdot_des_hands(3), _modify_xdot_des_hands(4), _modify_xdot_des_hands(5));
-
-	// _m_x_err.head(3) = _modify_x_des_hands.head(3) - _x_hand.head(3);
-	// _m_x_err.tail(3) = -CustomMath::getPhi(Model._R_hand, _m_R_des_hand);
-
-	// _m_xdot_err.head(3) = _modify_xdot_des_hands.head(3) - _xdot_hand.head(3);
-	// _m_xdot_err.tail(3) =  - _xdot_hand.tail(3);
-
-	// cout << "_modify_x_des_hands: "<<_modify_x_des_hands.transpose()<<endl;
-
-	////////////////////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////////////////////
-
 	_Force_error = (_FTdata - _F_desired );
 	_int_F_desired_ = _int_F_desired_ + _Force_error*_dt;
 
 	_torqueForce = _J_T_hands * (_kpf*_Force_error + _kif*_int_F_desired_);
-	_torque = _J_T_hands * _lambda * (_kpj *_x_err_hand + _kdj * _xdot_err_hand ) + _torqueForce + Model._bg ;
-	F_temp =  _lambda * (_kpj *_x_err_hand + _kdj * _xdot_err_hand ) + CustomMath::pseudoInverseQR(_J_hands.transpose())*_torqueForce + Model._bg;
+	// _torque = _J_T_hands * _lambda * (_kpj *_x_err_hand + _kdj * _xdot_err_hand ) + _torqueForce + Model._bg ;
+
+	F_temp =  _lambda * (_kpj *_x_err_hand + _kdj * _xdot_err_hand ) + _kpf*_Force_error + _kif*_int_F_desired_ + CustomMath::pseudoInverseQR(_J_hands.transpose())*Model._bg;
 
 	_modify_xdot_des_hands = VirtualTank(_xdot_hand, _xdot_des_hand, _FTdata, F_temp, _gamma);
-	_gamma = ValveGainScheduler(_Power_in, _P_total, _gamma, _E_t);
 
 	_modify_x_des_hands = _x_hand + _modify_xdot_des_hands * _dt;
 
@@ -449,6 +484,13 @@ void CController::OperationalSpaceControl()
 
 	_m_xdot_err.head(3) = _modify_xdot_des_hands.head(3) - _xdot_hand.head(3);
 	_m_xdot_err.tail(3) =  - _xdot_hand.tail(3);
+
+	cout << "_modify_x_des_hands: "<<_modify_x_des_hands.transpose()<<endl;
+
+	////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////
+
+	// _gamma = ValveGainScheduler(_Power_in, _P_total, _gamma, _E_t);
 
 	// cout << _FTdata.transpose() << endl;
 	// cout << (CustomMath::pseudoInverseQR(_J_T_hands.transpose())*_torque).transpose() << endl;
@@ -536,7 +578,7 @@ void CController::CbfController()
 void CController::Initialize()
 {	
 
-	s_dot = 0.0; s = 0.0;
+
 	std::remove("/home/kist/euncheol/Dual-arm/data/Sim_data/panda_qddot.txt");
     _control_mode = 1; //1: joint space, 2: task space(CLIK)
 
@@ -544,7 +586,6 @@ void CController::Initialize()
     param.setZero(2);
 	ParticleYamlRead("../libs/param.yaml", param);
 	_state_x = 0;
-	gamma.setZero();
 	_gamma << 1.0, 1.0, 1.0;
 	_input.setZero(6);
 	_modify_x_des_hands.setZero(6);
@@ -557,9 +598,11 @@ void CController::Initialize()
 	_p_up_re.setZero(3);
 	_p_low_re<< -2,-2,-2;
 	_P_up = 0.0; _P_low = -10.0;
-	_E_up = 120; _E_low = 0;
+	_E_up = 120; _E_low = 10;
 	E_threshold = 0.5;
+	_E_t = 0.0;
 
+	_state_x = sqrt(2*_E_low); // predefined lower limit of energy E_low that you want the system to start
 
 	log.setZero(14);
 	_bool_init = true;

@@ -216,8 +216,9 @@ private:
     double _state_xdot;
     double _E_t;
     Vector3d _gamma;
-    Vector3d gamma;
+    // Vector3d gamma;
     Vector3d _Power_in;
+    Vector3d _Power_t;
 
     VectorXd _input;
     VectorXd _modify_xdot_des_hands;
@@ -235,8 +236,10 @@ private:
     double E_threshold;
     double cos_var;
 
-    double s_dot;
-    double s;
+    int alpha, beta, gamma;
+
+    double _Total_storage_flow;
+    double _storage_input1_flow,_storage_input2_flow,_storage_input3_flow;
 
 
     Vector3d ValveGainScheduler(Vector3d _Power_in, double P_total, Vector3d gamma, double _E_t);
