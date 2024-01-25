@@ -286,6 +286,7 @@ VectorXd CController::VirtualTank(VectorXd xdot, VectorXd xdot_des, Eigen::Matri
 	_storage_input2_flow = xdot_des.transpose() * -force_ref;	
 	_storage_input3_flow = xdot_des.transpose() * -force_ext;	
 	_Total_storage_flow = _storage_input1_flow + _storage_input2_flow + _storage_input3_flow;
+	_Total_storage += _Total_storage_flow*_dt;
 	//
 
 	_Power_in(0) = xdot.transpose() * force_ref;				// Port 1
@@ -601,6 +602,7 @@ void CController::Initialize()
 	_E_up = 120; _E_low = 10;
 	E_threshold = 0.5;
 	_E_t = 0.0;
+	_Total_storage = 0.0;
 
 	_state_x = sqrt(2*_E_low); // predefined lower limit of energy E_low that you want the system to start
 

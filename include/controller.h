@@ -239,6 +239,7 @@ private:
     int alpha, beta, gamma;
 
     double _Total_storage_flow;
+    double _Total_storage;
     double _storage_input1_flow,_storage_input2_flow,_storage_input3_flow;
 
 
