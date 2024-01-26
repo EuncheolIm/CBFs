@@ -7,7 +7,7 @@
       <material specular="0.5" shininess="0.25"/>
       <!-- <joint frictionloss="2" damping="1" axis="0 0 1" range="-2.7437 2.7437"/> -->
 
-      <joint armature="0.1" damping="1" frictionloss="2" axis="0 0 1" range="-2.8973 2.8973"/>
+      <joint armature="0.1" damping="1" axis="0 0 1" range="-2.8973 2.8973"/>
       <!-- <general dyntype="none" biastype="affine" ctrlrange="-2.8973 2.8973" forcerange="-87 87"/> -->
       <default class="finger">
         <joint axis="0 1 0" type="slide" range="0 0.04"/>
@@ -147,7 +147,6 @@
         <joint name="joint1" pos="0 0 0" axis="0 0 1" range="-2.7437 2.7437"/>
         <geom material="white" mesh="link1" class="visual"/>
         <geom mesh="link1_c" class="collision"/>
-        <site name= "joint1" pos="0 0 0.0" type="sphere"  size=".01 .011 .01" rgba="0.9 0.4 0.6 1"/>/>
         <body name="link2" quat="1 -1 0 0">
           <inertial mass="0.646926" pos="-0.003141 -0.02872 0.003495"
               fullinertia="0.0079620 2.8110e-2 2.5995e-2 -3.925e-3 1.0254e-2 7.04e-4"/>
@@ -176,7 +175,7 @@
                 <inertial mass="1.225946" pos="-1.1953e-2 4.1065e-2 -3.8437e-2"
                     fullinertia="3.5549e-2 2.9474e-2 8.627e-3 -2.117e-3 -4.037e-3 2.29e-4"/>
                 <joint name="joint5" pos="0 0 0" axis="0 0 1" range="-2.8065 2.8065"/>
-                <geom name="link5_0" mesh="link5_0" material="black" class="visual"/>
+                <geom mesh="link5_0" material="black" class="visual"/>
                 <geom mesh="link5_1" material="white" class="visual"/>
                 <geom mesh="link5_2" material="white" class="visual"/>
                 <geom mesh="link5_c0" class="collision"/>
@@ -217,11 +216,12 @@
                     <geom mesh="link7_6" material="black" class="visual"/>
                     <geom mesh="link7_7" material="white" class="visual"/>
                     <geom mesh="link7_c" class="collision"/>
-                    <!-- <body name="temp" pos="0 0 0.11"  >
+                    <body name="temp" pos="0 0 0.11"  >
                       <inertial pos="0 0 0" mass="0.00001" diaginertia="0.0001 0.0001 0.0001" />
                       <geom name="temp1"  type="sphere"  size=".01 .011 .0001" rgba = "0.1 0.6 0.4 1"/>
                       <site name="hand_site" pos="0 0 0.0" type="sphere"  size=".01 .011 .0001" rgba="0.9 0.4 0.6 1"/>
-                    </body> -->
+                      <!-- <site name="hand_site" pos="0 0 0.1" type="sphere"  size=".01 .011 .0001" rgba="0.9 0.4 0.6 1"/> -->
+                    </body>
 
                     <body name="hand" pos="0 0 0.107" quat="0.9238795 0 0 -0.3826834">
                       <inertial mass="0.73" pos="-0.01 0 0.03" diaginertia="0.001 0.0025 0.0017"/>
@@ -233,8 +233,9 @@
                       <geom mesh="hand_c" class="collision"/>
                       <body name="left_finger" pos="0 0 0.0584">
                         <inertial mass="0.015" pos="0 0 0" diaginertia="2.375e-6 2.375e-6 7.5e-7"/>
-                        <geom name="left_finger_0"  mesh="finger_0" material="off_white" class="visual"/>
-                        <geom name="left_finger_1" mesh="finger_1" material="black" class="visual"/>
+                   
+                        <geom mesh="finger_0" material="off_white" class="visual"/>
+                        <geom mesh="finger_1" material="black" class="visual"/>
                         <geom mesh="finger_0" class="collision"/>
                         <geom class="fingertip_pad_collision_1"/>
                         <geom class="fingertip_pad_collision_2"/>
@@ -244,21 +245,15 @@
                       </body>
                       <body name="right_finger" pos="0 0 0.0584" quat="0 0 0 1">
                         <inertial mass="0.015" pos="0 0 0" diaginertia="2.375e-6 2.375e-6 7.5e-7"/>
-                        <geom name="right_finger_0" mesh="finger_0" material="off_white" class="visual"/>
-                        <geom name="right_finger_1" mesh="finger_1" material="black" class="visual"/>
+                        
+                        <geom mesh="finger_0" material="off_white" class="visual"/>
+                        <geom mesh="finger_1" material="black" class="visual"/>
                         <geom mesh="finger_0" class="collision"/>
                         <geom class="fingertip_pad_collision_1"/>
                         <geom class="fingertip_pad_collision_2"/>
                         <geom class="fingertip_pad_collision_3"/>
                         <geom class="fingertip_pad_collision_4"/>
                         <geom class="fingertip_pad_collision_5"/>
-                      </body>
-                      <body name="temp" pos="0 0 0.103"  >
-                        <inertial pos="0 0 0" mass="0.00001" diaginertia="0.0001 0.0001 0.0001" />
-                        <geom name="temp1"  type="box"  size=".01 .011 .02" rgba = "0.1 0.6 0.4 1"/>
-                        
-                        <site name="hand_site" pos="0 0 0.0" type="box"  size=".01 .011 .01" rgba="0.9 0.4 0.6 1"/>
-                        
                       </body>
                     </body>
 
@@ -271,19 +266,15 @@
       </body>
     </body>
 
-  <body name="wall" pos = "1.6 0 0">
+  <!-- <body name="wall" pos = "1.68 0 0"> -->
+  <!-- <body name="wall" pos = "1.78 0 0">
       <inertial pos="0.0 0.0 0.0" mass="1.0" diaginertia="0.1 0.1 0.1" />
-      <geom name = "wall" type="box" size="0.05 0.50 1.0" solref="-1000 0" rgba = "0.1 0.8 0.4 1"/>
+      <geom name = "wall" type="box" size="0.05 0.50 1.5" solref="-1000 0" rgba = "0.1 0.4 0.4 1"/> -->
       <!-- <body name="wall1" pos = "-0.05 0.05 0.815" quat =" 0 0 0.1 1">
         <inertial pos="0.0 0.0 0.0" mass="1.0" diaginertia="0.1 0.1 0.1" />
         <geom name = "wall1" type="box" size="0.02 0.50 0.05" rgba = "0.1 0.6 0.4 1"/>
       </body> -->
-  </body>    
-
-   <!-- <body name="obstacle" pos="1.5 0.5 0.7">
-    <geom name = "obstacle" type="box" size="0.05 0.05 0.05" solref="-1000 0" rgba = "0.1 0.4 0.4 1"/>
-    <joint name="obstacle_joint" pos="0 0 0" type="slide" axis="0 1 0 " range="-3.0159 3.0159"/>
-   </body>  -->
+  <!-- </body>     -->
   </worldbody>
   <!-- <tendon>
     <fixed name="split"> // gripper finger
@@ -292,13 +283,17 @@
     </fixed>
   </tendon> -->
   <contact>
-    <pair geom1 = "left_finger_0" geom2="wall" />
-    <pair geom1 = "left_finger_1" geom2="wall" />
-    <pair geom1 = "right_finger_0" geom2="wall" />
-    <pair geom1 = "right_finger_1" geom2="wall" />
-    <pair geom1 = "temp1" geom2="wall" /> 
+    <!-- <pair geom1 = "temp1" geom2="wall" /> -->
+    <!-- <pair geom1 = "right_finger_1" geom2="wall" /> -->
+    <!-- <pair geom1 = "left_finger_0" geom2="wall" />
+    <pair geom1 = "left_finger_1" geom2="wall" /> -->
+    <!-- <pair geom1 = "temp1" geom2="wall1" /> -->
+    <!-- <pair geom1 = "right_finger_1" geom2="wall1" />
+    <pair geom1 = "left_finger_0" geom2="wall1" />
+    <pair geom1 = "left_finger_1" geom2="wall1" /> -->
 
-    <!-- <pair geom1 = "link5_0" geom2="obstacle" /> -->
+    <!-- <pair geom1 = "hand_3" geom2="wall" /> -->
+    <!-- <pair geom1 = "hand_3" geom2="wall1" /> -->
 
   </contact>
   <equality>
@@ -318,10 +313,6 @@
     <motor ctrllimited="true" ctrlrange="-12.0 12.0" joint="joint6" name="actuator6"/>
     <motor ctrllimited="true" ctrlrange="-12.0 12.0" joint="joint7" name="actuator7"/>
     <!-- <motor ctrllimited="true" tendon="split" forcerange="-100 100" ctrlrange="-255 255" name="actuator8"/> -->
-    
-    <!-- <general joint="obstacle_joint" gear="10 0 0">
-    </general> -->
- 
   </actuator>
 
 

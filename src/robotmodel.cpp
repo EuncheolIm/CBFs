@@ -69,7 +69,6 @@ void CModel::Initialize()
 void CModel::load_model()
 {   
 	RigidBodyDynamics::Addons::URDFReadFromFile("../model/fr3.urdf", &_model, false, true);
-	// RigidBodyDynamics::Addons::URDFReadFromFile("../model/panda_example_robot_data/panda.urdf", &_model, false, true);
     cout << endl << endl << "Model Loaded for RBDL." << endl << "Total DoFs: " << _model.dof_count << endl << endl;
 	if (_model.dof_count != _k)
 	{

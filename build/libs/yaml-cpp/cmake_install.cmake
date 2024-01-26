@@ -1,4 +1,4 @@
-# Install script for directory: /home/kist/euncheol/CBFs/libs/yaml-cpp
+# Install script for directory: /Users/im-euncheol/Desktop/KIST/CBFs/libs/yaml-cpp
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -27,11 +27,6 @@ if(NOT CMAKE_INSTALL_COMPONENT)
   endif()
 endif()
 
-# Install shared libraries without execute permission?
-if(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
-  set(CMAKE_INSTALL_SO_NO_EXE "1")
-endif()
-
 # Is this installation the result of a crosscompile?
 if(NOT DEFINED CMAKE_CROSSCOMPILING)
   set(CMAKE_CROSSCOMPILING "FALSE")
@@ -44,6 +39,6 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/kist/euncheol/CBFs/build/libs/yaml-cpp/util/cmake_install.cmake")
+  include("/Users/im-euncheol/Desktop/KIST/CBFs/build/libs/yaml-cpp/util/cmake_install.cmake")
 endif()
 

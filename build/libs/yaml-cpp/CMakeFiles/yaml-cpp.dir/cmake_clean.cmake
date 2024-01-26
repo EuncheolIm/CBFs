@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  ".0.8"
   "CMakeFiles/yaml-cpp.dir/src/binary.cpp.o"
   "CMakeFiles/yaml-cpp.dir/src/binary.cpp.o.d"
   "CMakeFiles/yaml-cpp.dir/src/contrib/graphbuilder.cpp.o"
@@ -61,7 +62,9 @@ file(REMOVE_RECURSE
   "CMakeFiles/yaml-cpp.dir/src/stream.cpp.o.d"
   "CMakeFiles/yaml-cpp.dir/src/tag.cpp.o"
   "CMakeFiles/yaml-cpp.dir/src/tag.cpp.o.d"
-  "libyaml-cpp.a"
+  "libyaml-cpp.0.8.0.dylib"
+  "libyaml-cpp.0.8.dylib"
+  "libyaml-cpp.dylib"
   "libyaml-cpp.pdb"
 )
 

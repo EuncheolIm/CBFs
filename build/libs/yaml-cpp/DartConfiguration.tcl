@@ -4,17 +4,17 @@
 
 
 # Configuration directories and files
-SourceDirectory: /home/kist/euncheol/CBFs/libs/yaml-cpp
-BuildDirectory: /home/kist/euncheol/CBFs/build/libs/yaml-cpp
+SourceDirectory: /Users/im-euncheol/Desktop/KIST/CBFs/libs/yaml-cpp
+BuildDirectory: /Users/im-euncheol/Desktop/KIST/CBFs/build/libs/yaml-cpp
 
 # Where to place the cost data store
 CostDataFile: 
 
 # Site is something like machine.domain, i.e. pragmatic.crd
-Site: kist-MS-7D42
+Site: im-euncheol-ui-MacBookPro.local
 
 # Build name is osname-revision-compiler, i.e. Linux-2.4.2-2smp-c++
-BuildName: Linux-c++
+BuildName: Darwin-clang++
 
 # Subprojects
 LabelsForSubprojects: 
@@ -27,8 +27,8 @@ SubmitInactivityTimeout:
 NightlyStartTime: 00:00:00 EDT
 
 # Commands for the build/test/submit cycle
-ConfigureCommand: "/home/kist/anaconda3/lib/python3.9/site-packages/cmake/data/bin/cmake" "/home/kist/euncheol/CBFs/libs/yaml-cpp"
-MakeCommand: /home/kist/anaconda3/lib/python3.9/site-packages/cmake/data/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}"
+ConfigureCommand: "/opt/homebrew/Cellar/cmake/3.27.1/bin/cmake" "/Users/im-euncheol/Desktop/KIST/CBFs/libs/yaml-cpp"
+MakeCommand: /opt/homebrew/Cellar/cmake/3.27.1/bin/cmake --build . --config "${CTEST_CONFIGURATION_TYPE}"
 DefaultCTestConfigurationType: Release
 
 # version control
@@ -45,7 +45,7 @@ SVNOptions:
 SVNUpdateOptions: 
 
 # Git options
-GITCommand: /usr/bin/git
+GITCommand: /opt/homebrew/bin/git
 GITInitSubmodules: 
 GITUpdateOptions: 
 GITUpdateCustom: 
@@ -58,13 +58,13 @@ P4UpdateOptions:
 P4UpdateCustom: 
 
 # Generic update command
-UpdateCommand: /usr/bin/git
+UpdateCommand: /opt/homebrew/bin/git
 UpdateOptions: 
 UpdateType: git
 
 # Compiler info
-Compiler: /usr/bin/c++
-CompilerVersion: 9.4.0
+Compiler: /usr/bin/clang++
+CompilerVersion: 15.0.0.15000100
 
 # Dynamic analysis (MemCheck)
 PurifyCommand: 
@@ -76,7 +76,7 @@ CudaSanitizerCommand:
 CudaSanitizerCommandOptions: 
 MemoryCheckType: 
 MemoryCheckSanitizerOptions: 
-MemoryCheckCommand: /usr/local/cuda-11.7/bin/cuda-memcheck
+MemoryCheckCommand: MEMORYCHECK_COMMAND-NOTFOUND
 MemoryCheckCommandOptions: 
 MemoryCheckSuppressionFile: 
 

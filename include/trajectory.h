@@ -3,8 +3,8 @@
 #define __TRAJECTORY_H
 
 #include <iostream>
-#include <eigen3/Eigen/Dense>
-#include <eigen3/unsupported/Eigen/MatrixFunctions>
+#include <Eigen/Dense>
+#include <unsupported/Eigen/MatrixFunctions>
 #include "custommath.h"
 
 using namespace std;

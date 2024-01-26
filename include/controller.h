@@ -3,7 +3,7 @@
 #define __CONTROLLER_H
 
 #include <iostream>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <rbdl/rbdl.h>
 #include <rbdl/addons/urdfreader/urdfreader.h>
 #include <fstream>
@@ -240,6 +240,7 @@ private:
 
 
     Vector3d ValveGainScheduler(Vector3d _Power_in, double P_total, Vector3d gamma, double _E_t);
+    void TankController();
 };
 
 #endif

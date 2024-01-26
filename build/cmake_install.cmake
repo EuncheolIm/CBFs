@@ -1,4 +1,4 @@
-# Install script for directory: /home/kist/euncheol/CBFs
+# Install script for directory: /Users/im-euncheol/Desktop/KIST/CBFs
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -27,11 +27,6 @@ if(NOT CMAKE_INSTALL_COMPONENT)
   endif()
 endif()
 
-# Install shared libraries without execute permission?
-if(NOT DEFINED CMAKE_INSTALL_SO_NO_EXE)
-  set(CMAKE_INSTALL_SO_NO_EXE "1")
-endif()
-
 # Is this installation the result of a crosscompile?
 if(NOT DEFINED CMAKE_CROSSCOMPILING)
   set(CMAKE_CROSSCOMPILING "FALSE")
@@ -44,12 +39,22 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/kist/euncheol/CBFs/build/qpOASES/cmake_install.cmake")
+  include("/Users/im-euncheol/Desktop/KIST/CBFs/build/libs/mujoco/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("/home/kist/euncheol/CBFs/build/libs/yaml-cpp/cmake_install.cmake")
+  include("/Users/im-euncheol/Desktop/KIST/CBFs/build/libs/rbdl/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("/Users/im-euncheol/Desktop/KIST/CBFs/build/libs/qpOASES/cmake_install.cmake")
+endif()
+
+if(NOT CMAKE_INSTALL_LOCAL_ONLY)
+  # Include the install script for the subdirectory.
+  include("/Users/im-euncheol/Desktop/KIST/CBFs/build/libs/yaml-cpp/cmake_install.cmake")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)
@@ -60,5 +65,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/kist/euncheol/CBFs/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/Users/im-euncheol/Desktop/KIST/CBFs/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

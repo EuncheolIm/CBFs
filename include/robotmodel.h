@@ -3,7 +3,7 @@
 #define __MODEL_H
 
 #include <iostream>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <rbdl/rbdl.h>
 #include <rbdl/addons/urdfreader/urdfreader.h>
 #include "custommath.h"
@@ -51,9 +51,11 @@ public:
     VectorXd _max_ee_pos, _min_ee_pos; 
     VectorXd _max_ee_vel, _min_ee_vel;
     VectorXd _max_force, _min_force;
+
+    void load_model(); // read URDF model
 private:
 	void Initialize();
-	void load_model(); // read URDF model
+	// void load_model(); // read URDF model
 	void set_robot_config();
 
     VectorXd _q, _qdot; // joint sensordata
