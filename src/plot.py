@@ -14,7 +14,7 @@ data2 = lmake_xy("/home/kist/euncheol/Dual-arm/data/Sim_data/comp_clik.txt")
 print("d : ", data.shape)
 
 
-mode = 1
+mode = 2
 if (mode == 1):
         current_q = data[3000:,:7] *180/np.pi
         reference_q = data[3000:,7:14]*180/np.pi
@@ -46,10 +46,17 @@ if (mode == 1):
 elif(mode == 2):
         pos = ["x","y","z", "roll","pitch","yaw"]
 
-        current_pos = data[:,:6] 
-        reference_pos = data[:,6:12] 
-        current_pos[:,3:] = current_pos[:,3:]* 180/np.pi
+        reference_pos = data[:,:6] 
+        current_pos = data[:,6:12] 
         reference_pos[:,3:] = reference_pos[:,3:]* 180/np.pi
+        current_pos[:,3:] = current_pos[:,3:]* 180/np.pi
+        
+        _E_up = 120
+        _E_low = 1
+        
+        _E_t = data[13]
+        _E_up = 120*np.ones_like(_E_t)
+        _E_low = np.ones_like(_E_t)
         
         # clikpos = data2[:,:6] 
         # clikpos[:,3:] = clikpos[:,3:]* 180/np.pi
@@ -67,7 +74,7 @@ elif(mode == 2):
                         plt.title("orientation {}".format([pos[i]]))
                         plt.ylabel(" angle (deg)")
                 plt.plot(reference_pos[:,i], label = "reference")
-                plt.plot(current_pos[:,i],  label = "MPC")
+                plt.plot(current_pos[:,i],  label = "current")
                 # plt.plot(clikpos[:,i],  label = "CLIK")
                 
                 # plt.plot(current_pos1[:,i],  label = "CLIK")
@@ -80,6 +87,13 @@ elif(mode == 2):
                 
                 
                 plt.legend()
+        plt.show()
+        
+        plt.figure(figsize=(20,10))
+        plt.plot(_E_up, label = "E_up")
+        plt.plot(_E_t, label = "energy")
+        plt.plot(_E_low, label = "E_low")
+        plt.legend()
         plt.show()
 elif(mode == 3):
 

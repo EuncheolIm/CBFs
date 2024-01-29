@@ -40,7 +40,7 @@ void CController::addExternal_ForceTorque(const char** body_name, double* force,
 {
 	*body_name = "temp";
 	_time_e = 5.0;
-	_force_e << 0, 0, 0, 0, 0 ,0;
+	_force_e << 0, 5, 0, 0, 0 ,0;
 	for(int i=0; i<6; i++)
 	{
 		force[i] = _force_e(i);
@@ -293,15 +293,15 @@ VectorXd CController::VirtualTank(VectorXd xdot, VectorXd xdot_des, Eigen::Matri
 	_Power_in(1) = xdot_des.transpose() * -force_ref;			// Port 2
 	_Power_in(2) = xdot_des.transpose() * -force_ext;			// Port 3
 
-	_Power_t = _Power_in;
+	_Power_t = -_Power_in;
 	// cout << _Power_in.transpose()<<endl;					// Sum all of Port (1,2,3)
 	// _P_total = cal_gamma.transpose()*_Power_t;
 	// _state_xdot = _P_total/_state_x; 
 	// _state_x = _state_x + _state_xdot*_dt;
 
 	_P_total = _Power_t(0) + _Power_t(1) + _Power_t(2);
-	cout << "_P_total: "<<_P_total<<endl;
-	cout << "_E_t: "<<_E_t<<endl;
+	// cout << "_P_total: "<<_P_total<<endl;
+	// cout << "_E_t: "<<_E_t<<endl;
 	// set gamma
 	if(_P_total <= 0)
 	{
@@ -329,29 +329,22 @@ VectorXd CController::VirtualTank(VectorXd xdot, VectorXd xdot_des, Eigen::Matri
 	_state_xdot = (alpha/_state_x)*(gamma-1)*_P_total - (beta/_state_x)*gamma*_P_total;
 	_state_x = _state_x + _state_xdot*_dt;
 
-	cout << "alpha: "<<alpha<< "   beta: "<< beta<< "  gamma:  "<< gamma<<endl;
-	cout << "_state_x: "<<_state_x<< "   _state_xdot: "<< _state_xdot<<endl;
+	// cout << "alpha: "<<alpha<< "   beta: "<< beta<< "  gamma:  "<< gamma<<endl;
+	// cout << "_state_x: "<<_state_x<< "   _state_xdot: "<< _state_xdot<<endl;
 
 	_E_t = pow(_state_x,2) / 2; 								// _E_t is Tank dynamics == Tank energy
 
-	if(_Total_storage_flow <= _E_t)
+	// if(_Total_storage_flow <= _E_t)
+	if(_Total_storage_flow <= _P_total)
 	{
 		_input = xdot_des;
 	}
 	else { _input.setZero(); }
 
-	cout << "_E_t: "<<_E_t<< "   _Total_storage_flow: "<< _Total_storage_flow<<endl;
+	cout << "_P_total: "<<_P_total<< "   _Total_storage_flow: "<< _Total_storage_flow<<endl;
+	// cout << "_E_t: "<<_E_t<< "   _Total_storage_flow: "<< _Total_storage_flow<<endl;
 
-	// _input = xdot_des;
-	// for(int i=0; i<3; i++)
-    // {
-    //     if (_Power_in(i) < 0){
-	// 		for (int j=0; j<7; j++){
-    //         	_input(j) = cal_gamma(i)*_input(j);
-	// 		}
-    //     }
-    //     else{_input = _input; }
-    // }
+
 
 	return	_input;
 }
@@ -428,6 +421,8 @@ void CController::JointControl()
 	_torque.setZero();
 	_torque = Model._A*(400*(_q_des - _q) + 40*(_qdot_des - _qdot)) + Model._bg;
 
+	_modify_x_des_hands = _x_hand;
+
 }
 void CController::CLIK()
 {
@@ -476,17 +471,20 @@ void CController::OperationalSpaceControl()
 
 	_modify_xdot_des_hands = VirtualTank(_xdot_hand, _xdot_des_hand, _FTdata, F_temp, _gamma);
 
-	_modify_x_des_hands = _x_hand + _modify_xdot_des_hands * _dt;
+	// _modify_x_des_hands = _x_hand + _modify_xdot_des_hands * _dt;
 
-	_m_R_des_hand = CustomMath::GetBodyRotationMatrix(_modify_xdot_des_hands(3), _modify_xdot_des_hands(4), _modify_xdot_des_hands(5));
+	_modify_x_des_hands = _modify_x_des_hands + _modify_xdot_des_hands * _dt;
 
-	_m_x_err.head(3) = _modify_x_des_hands.head(3) - _x_hand.head(3);
-	_m_x_err.tail(3) = -CustomMath::getPhi(Model._R_hand, _m_R_des_hand);
+	_m_R_des_hand = CustomMath::GetBodyRotationMatrix(_modify_x_des_hands(3), _modify_x_des_hands(4), _modify_x_des_hands(5));
 
-	_m_xdot_err.head(3) = _modify_xdot_des_hands.head(3) - _xdot_hand.head(3);
-	_m_xdot_err.tail(3) =  - _xdot_hand.tail(3);
+	_m_x_err.segment(0,3) = _modify_x_des_hands.head(3) - _x_hand.head(3);
+	_m_x_err.segment(3,3) = -CustomMath::getPhi(Model._R_hand, _m_R_des_hand);
 
-	cout << "_modify_x_des_hands: "<<_modify_x_des_hands.transpose()<<endl;
+	_m_xdot_err.segment(0,3) = _modify_xdot_des_hands.head(3) - _xdot_hand.head(3);
+	_m_xdot_err.segment(3,3) =  - _xdot_hand.tail(3);
+
+
+	// cout << "_modify_x_des_hands: "<<_modify_x_des_hands.transpose()<<endl;
 
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////
@@ -505,13 +503,26 @@ void CController::OperationalSpaceControl()
 	// s = s +s_dot*_dt;
 	// cout <<s <<endl; 
 	// _torque = _J_T_hands * _lambda * (_kpj *_x_err_hand + _kdj * _xdot_err_hand ) + _torqueForce + Model._bg ;
-
+// 
 	_torque = _J_T_hands * _lambda * (_kpj *_m_x_err + _kdj * _m_xdot_err ) + _torqueForce + Model._bg ;
+
+	cout << "  _xdot_des_hand: "<<_xdot_des_hand.transpose()<<endl;
+	cout << "_modify_des_hand: "<<_modify_xdot_des_hands.transpose()<<endl<<endl;
+
+	cout << "     _x_des_hand: "<<_x_des_hand.transpose()<<endl;
+	cout << "_modify_des_hand: "<<_modify_x_des_hands.transpose()<<endl<<endl;
+
+	cout << "error: "<<_x_err_hand.transpose()<<endl;
+	cout << "m_error: "<<_m_x_err.transpose()<<endl;
+	// _torque = _J_T_hands * _lambda * (_kpj *_x_err_hand + _kdj * _xdot_err_hand ) + Model._bg ;
 
 	for (int i=0; i< 6; i++){
 			log(i) = _x_des_hand(i);
 			log(i+6) = _x_hand(i);
 	}
+	log(12) = _E_up;
+	log(13) = _E_t;
+	log(14) = _E_low;
 	fout.open("/home/kist/euncheol/Dual-arm/data/Sim_data/panda_qddot.txt",ios::app);
 	fout << log.transpose() <<endl;
 	fout.close();
@@ -599,14 +610,15 @@ void CController::Initialize()
 	_p_up_re.setZero(3);
 	_p_low_re<< -2,-2,-2;
 	_P_up = 0.0; _P_low = -10.0;
-	_E_up = 120; _E_low = 10;
+	_E_up = 120; _E_low = 1;
 	E_threshold = 0.5;
-	_E_t = 0.0;
+	_E_t = _E_low;
 	_Total_storage = 0.0;
 
 	_state_x = sqrt(2*_E_low); // predefined lower limit of energy E_low that you want the system to start
+	_int_F_desired_.setZero();
 
-	log.setZero(14);
+	log.setZero(17);
 	_bool_init = true;
 	_t = 0.0;
 	_init_t = 0.0;

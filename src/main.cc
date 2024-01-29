@@ -460,7 +460,7 @@ void PhysicsLoop(mj::Simulate& sim) {
                     for(int i=0; i<6; i++)
                     {
                       d->xfrc_applied[body_idx*6 + i] = 0;
-                      d->xfrc_applied[body_obs*6 + 1] = -10;
+                      // d->xfrc_applied[body_obs*6 + 1] = -10;
                     }
                   }
                   else {
@@ -468,7 +468,7 @@ void PhysicsLoop(mj::Simulate& sim) {
                     {
                       d->xfrc_applied[body_idx*6 + i] = force_e[i];
                     
-                      d->xfrc_applied[body_obs*6 + 1] = -10;
+                      // d->xfrc_applied[body_obs*6 + 1] = -10;
                       
                     }
                   }
