@@ -1,16 +1,16 @@
-import pyautogui
-from PIL import ImageGrab
-import time
+import numpy as np
 
 
-# 마우스 좌표 출력
-while True:
-    screen = ImageGrab.grab() # 화면 캡쳐
-    color = screen.getpixel(pyautogui.position(x=1103, y=906))
-    print(color)#현재의 마우스 위치의 색상 출력.
-    # print( "Current Mouse Position : ", pyautogui.position() ) 
-    if color == (51, 32, 213):
-        print('blue!')
-        pyautogui.moveTo(x=1103, y=906)
-        pyautogui.click()
-    time.sleep(3)
+
+var = (50.1 - 50) / 0.5 
+print (var)
+var = var * np.pi
+
+print (np.cos(20*np.pi))
+print (np.cos(var))
+a = 1-np.cos(var)
+print (a)
+a = a/2
+
+
+print (a)

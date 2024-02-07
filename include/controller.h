@@ -14,6 +14,7 @@
 #include "quadraticprogram.h"
 #include <yaml-cpp/yaml.h>
 #include <future>
+#include <algorithm>  // std::min .
 
 using namespace std;
 using namespace Eigen;
@@ -209,8 +210,9 @@ private:
     Eigen::Matrix<double, 6, 1> _Force_error;
     VectorXd _F_desired;
     VectorXd _int_F_desired_;
-    double _kpf, _kif;
-
+    
+    // double _kpf, _kif;
+    MatrixXd _kpf, _kif;
     VectorXd VirtualTank(VectorXd xdot, VectorXd xdot_des, Eigen::Matrix<double, 6, 1> force_ext, Eigen::Matrix<double, 6, 1> force_ref, Vector3d gamma);
     double _state_x;
     double _state_xdot;
@@ -243,7 +245,8 @@ private:
     double _storage_input1_flow,_storage_input2_flow,_storage_input3_flow;
 
 
-    Vector3d ValveGainScheduler(Vector3d _Power_in, double P_total, Vector3d gamma, double _E_t);
+    Vector3d ValveGainScheduler(Vector3d Power_t, Vector3d gamma, double _E_t);
+    void TankControl();
 };
 
 #endif

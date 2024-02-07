@@ -445,35 +445,35 @@ void PhysicsLoop(mj::Simulate& sim) {
               TaskControl.addExternal_ForceTorque(&body_name, force_e, &_time_e);
               body_idx = mj_name2id(m, mjOBJ_BODY, body_name);
           
-              int body_obs = mj_name2id(m, mjOBJ_BODY, "wall");
-              if(_time_e == 0)
-              {
-                for(int i=0; i<6; i++)
-                {
-                  d->xfrc_applied[body_idx*6 + i] = force_e[i];
-                }
-              }
-              else{
-                if(d->time >= _time_e){
-                  if((d->time - _time_e) > 3.0)
-                  {
-                    for(int i=0; i<6; i++)
-                    {
-                      d->xfrc_applied[body_idx*6 + i] = 0;
-                      // d->xfrc_applied[body_obs*6 + 1] = -10;
-                    }
-                  }
-                  else {
-                    for(int i=0; i<6; i++)
-                    {
-                      d->xfrc_applied[body_idx*6 + i] = force_e[i];
+              // int body_obs = mj_name2id(m, mjOBJ_BODY, "wall");
+              // if(_time_e == 0)
+              // {
+              //   for(int i=0; i<6; i++)
+              //   {
+              //     d->xfrc_applied[body_idx*6 + i] = force_e[i];
+              //   }
+              // }
+              // else{
+              //   if(d->time >= _time_e){
+              //     if((d->time - _time_e) > 3.0)
+              //     {
+              //       for(int i=0; i<6; i++)
+              //       {
+              //         d->xfrc_applied[body_idx*6 + i] = 0;
+              //         // d->xfrc_applied[body_obs*6 + 1] = -10;
+              //       }
+              //     }
+              //     else {
+              //       for(int i=0; i<6; i++)
+              //       {
+              //         d->xfrc_applied[body_idx*6 + i] = force_e[i];
                     
-                      // d->xfrc_applied[body_obs*6 + 1] = -10;
+              //         // d->xfrc_applied[body_obs*6 + 1] = -10;
                       
-                    }
-                  }
-                }
-              }
+              //       }
+              //     }
+              //   }
+              // }
               // body name check //
               // cout << mj_id2name(m,mjOBJ_BODY,9)<<endl;
               // for (int i=0; i<13*6; i++){

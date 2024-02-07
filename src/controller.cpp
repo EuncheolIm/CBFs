@@ -25,8 +25,10 @@ bool CController::ParticleYamlRead(std::string path, Eigen::VectorXd& unit)
     try
     {
         yaml_node = YAML::LoadFile(path.c_str());
-        unit(0) = yaml_node["Impedance_gain"]["kpf"].as<double>();
-        unit(1) = yaml_node["Impedance_gain"]["kif"].as<double>();
+        unit(0) = yaml_node["Impedance_gain"]["kpf_Tr"].as<double>();
+        unit(1) = yaml_node["Impedance_gain"]["kif_Ro"].as<double>();
+		unit(2) = yaml_node["Impedance_gain"]["kpf_Tr"].as<double>();
+        unit(3) = yaml_node["Impedance_gain"]["kif_Ro"].as<double>();
 
 	}
     catch(const std::exception& e)
@@ -40,7 +42,7 @@ void CController::addExternal_ForceTorque(const char** body_name, double* force,
 {
 	*body_name = "temp";
 	_time_e = 5.0;
-	_force_e << 0, 5, 0, 0, 0 ,0;
+	_force_e << 0, 0, 0, 0, 0 ,0;
 	for(int i=0; i<6; i++)
 	{
 		force[i] = _force_e(i);
@@ -134,9 +136,10 @@ void CController::control_mujoco()
 		_xdot_des_hand.head(3) = _HandTrajectory.velocity_cubicSpline();
 		_xdot_des_hand.segment<3>(3) = _HandTrajectory.rotationCubicDot();
 
-		OperationalSpaceControl();
+		// OperationalSpaceControl();
 		// CLIK();
 
+		TankControl();
 		// QPTaskSpaceControl();
 		
 		if (_HandTrajectory.check_trajectory_complete() == 1)
@@ -193,8 +196,8 @@ void CController::motionPlan()
 	// time_plan default = 5.0 seconds
 	_time_plan(1) = 1.0; // move home position
 	_time_plan(2) = 5.0; // wait
-	_time_plan(3) = 10.0; // wait
-	_time_plan(4) = 10.0; // wait
+	_time_plan(3) = 5.0; // wait
+	_time_plan(4) = 5.0; // wait
 
 	if (_bool_plan(_cnt_plan) == 1)
 	{
@@ -279,85 +282,49 @@ void CController::reset_target(double motion_time, Vector3d target_pos, Vector3d
 VectorXd CController::VirtualTank(VectorXd xdot, VectorXd xdot_des, Eigen::Matrix<double, 6, 1> force_ext, 
 													Eigen::Matrix<double, 6, 1> force_ref, Vector3d cal_gamma)
 {
-
-
 	// Compare with total stroage function and vitual energy tank energy
 	_storage_input1_flow = xdot.transpose() * force_ref;
 	_storage_input2_flow = xdot_des.transpose() * -force_ref;	
 	_storage_input3_flow = xdot_des.transpose() * -force_ext;	
-	_Total_storage_flow = _storage_input1_flow + _storage_input2_flow + _storage_input3_flow;
-	_Total_storage += _Total_storage_flow*_dt;
-	//
+	// _Total_storage_flow = _storage_input1_flow + _storage_input2_flow + _storage_input3_flow;
+	// _Total_storage += _Total_storage_flow*_dt;
 
 	_Power_in(0) = xdot.transpose() * force_ref;				// Port 1
 	_Power_in(1) = xdot_des.transpose() * -force_ref;			// Port 2
 	_Power_in(2) = xdot_des.transpose() * -force_ext;			// Port 3
 
 	_Power_t = -_Power_in;
-	// cout << _Power_in.transpose()<<endl;					// Sum all of Port (1,2,3)
-	// _P_total = cal_gamma.transpose()*_Power_t;
-	// _state_xdot = _P_total/_state_x; 
-	// _state_x = _state_x + _state_xdot*_dt;
-
-	_P_total = _Power_t(0) + _Power_t(1) + _Power_t(2);
-	// cout << "_P_total: "<<_P_total<<endl;
-	// cout << "_E_t: "<<_E_t<<endl;
-	// set gamma
-	if(_P_total <= 0)
-	{
-		gamma = 1;
-	}
-	else{ gamma = 0;}
-	// set beta
-	if(_E_t < _E_up)
-	{
-		beta = 1;
-	}
-	else{beta = 0;}
-	// set alpha
-	if(_E_low + E_threshold <= _E_t)
-	{
-		alpha = 1;
-	}
-	else if( _E_low <= _E_t && _E_t <= _E_low + E_threshold)
-	{	
-		cos_var = PI * (_E_t-_E_low)/E_threshold;
-		alpha = (1-cos(cos_var))/2;
-	}
-	else {alpha = 0;}
-
-	_state_xdot = (alpha/_state_x)*(gamma-1)*_P_total - (beta/_state_x)*gamma*_P_total;
+	// cout << _Power_in.transpose()<<endl;						// Sum all of Port (1,2,3)
+	_P_total = cal_gamma.transpose()*_Power_t;
+	_state_xdot = _P_total/_state_x; 
 	_state_x = _state_x + _state_xdot*_dt;
+	cout << "_Power_t: "<<_Power_t.transpose()<<endl;
+	cout << "_P_total: "<<_P_total<<endl;
+	cout << "_state_xdot: "<<_state_xdot<<endl;
+	cout << "_state_x: "<<_state_x<<endl;
 
-	// cout << "alpha: "<<alpha<< "   beta: "<< beta<< "  gamma:  "<< gamma<<endl;
-	// cout << "_state_x: "<<_state_x<< "   _state_xdot: "<< _state_xdot<<endl;
+	_E_t = pow(_state_x,2)/2;
+	cout << "_E_t: "<<_E_t<<endl;								// _E_t is Tank dynamics == Tank energy
 
-	_E_t = pow(_state_x,2) / 2; 								// _E_t is Tank dynamics == Tank energy
-
-	// if(_Total_storage_flow <= _E_t)
-	if(_Total_storage_flow <= _P_total)
+	if(_E_t < _E_low)
 	{
-		_input = xdot_des;
+		// _input = Model._g;
+		_input.setZero();
 	}
-	else { _input.setZero(); }
-
-	cout << "_P_total: "<<_P_total<< "   _Total_storage_flow: "<< _Total_storage_flow<<endl;
-	// cout << "_E_t: "<<_E_t<< "   _Total_storage_flow: "<< _Total_storage_flow<<endl;
-
-
+	else{_input = force_ref;}
 
 	return	_input;
 }
-Vector3d CController::ValveGainScheduler(Vector3d Power_in, double P_total, Vector3d gamma, double E_t)
+Vector3d CController::ValveGainScheduler(Vector3d Power_t, Vector3d gamma, double E_t)
 {	// Port Individual Power Limit
 	for(int i=0; i<3; i++)
     {
-        if (gamma(i)*Power_in(i) > _P_up){
-            gamma(i) = _P_up/Power_in(i);
+        if (gamma(i)*Power_t(i) > _P_up){
+            gamma(i) = _P_up/Power_t(i);
 			cout << "i"<<i<<" "<<gamma.transpose() << endl;
         }
-        else if (gamma(i)*Power_in(i) <_p_low_re(i)){
-            gamma(i) = _p_low_re(i)/Power_in(i);
+        else if (gamma(i)*Power_t(i) <_p_low_re(i)){
+            gamma(i) = _p_low_re(i)/Power_t(i);
 			// cout << "i"<<i<<" "<<gamma.transpose() << endl;
         }
         else{gamma(i) = gamma(i); cout << "i"<<i<<" "<<gamma.transpose() << endl;}
@@ -377,42 +344,44 @@ Vector3d CController::ValveGainScheduler(Vector3d Power_in, double P_total, Vect
     // }
 	for(int i=0; i<3; i++)
     {
-        if (gamma.transpose()*Power_in > _P_up){
-            gamma(i) = gamma(i)*_P_up/(gamma.transpose()*Power_in);
+        if (gamma.transpose()*Power_t > _P_up){
+            gamma(i) = gamma(i)*_P_up/(gamma.transpose()*_Power_t);
+			gamma(i) = min(gamma(i), 1.0);
         }
-        else if (gamma.transpose()*Power_in <_P_low){
-            gamma(i) = gamma(i)*_P_low/(gamma.transpose()*Power_in);
+        else if (gamma.transpose()*Power_t <_P_low){
+            gamma(i) = gamma(i)*_P_low/(gamma.transpose()*Power_t);
+			gamma(i) = min(gamma(i), 1.0);
         }
         else{gamma(i) = gamma(i);}
     }
 	cout << "Tank Power Limit gamma: "<<gamma.transpose() << endl;
 
 	// // Tank Energy Lower Limit 
-	// for(int i=0; i<3; i++)
-    // {
-	// 	if(Power_in(i) <=0 && E_t<=_E_low){
-	// 		cout << " p1"<<endl;
-	// 		gamma(i) = 0.0;
-	// 	}
-	// 	else if(Power_in(i) <=0 && _E_low < E_t <= _E_low + E_threshold){
-	// 		cos_var = PI*((E_t-_E_low)/E_threshold);
-	// 		gamma(i) = (1-cos(cos_var)) / 2;
-	// 		cout << " p2"<<endl;
-	// 	}
-	// 	else{gamma(i) = gamma(i); cout << " p3"<<endl;}
-	// }
-	// cout << "Tank Energy Lower Limit gamma: "<<gamma.transpose() << endl;
+	for(int i=0; i<3; i++)
+    {
+		if(Power_t(i) <=0 && E_t<=_E_low){
+			cout << " p1"<<endl;
+			gamma(i) = 0.0;
+		}
+		else if(Power_t(i) <=0 && _E_low <= E_t <= _E_low + E_threshold){
+			cos_var = PI*((E_t-_E_low)/E_threshold);
+			gamma(i) = (1-cos(cos_var)) / 2;
+			cout << " p2"<<endl;
+		}
+		else{gamma(i) = gamma(i); cout << " p3"<<endl;}
+	}
+	cout << "Tank Energy Lower Limit gamma: "<<gamma.transpose() << endl;
 
-	// // Tank Energy Upper Limit 
-	// for(int i=0; i<3; i++)
-    // {
-	// 	if(E_t >= _E_up){
-	// 		gamma(i) = 0.0;
-	// 	}
-	// 	else{gamma(i) = gamma(i);}
-	// }
+	// Tank Energy Upper Limit 
+	for(int i=0; i<3; i++)
+    {
+		if(E_t >= _E_up && Power_t(i) >=0){
+			gamma(i) = 0.0;
+		}
+		else{gamma(i) = gamma(i);}
+	}
 
-	// cout << "Tank Energy Upper Limit gamma: "<<gamma.transpose() << endl;
+	cout << "Tank Energy Upper Limit gamma: "<<gamma.transpose() << endl;
 	return	gamma;
 	
 }
@@ -465,56 +434,51 @@ void CController::OperationalSpaceControl()
 	_int_F_desired_ = _int_F_desired_ + _Force_error*_dt;
 
 	_torqueForce = _J_T_hands * (_kpf*_Force_error + _kif*_int_F_desired_);
+	_torque = _J_T_hands * _lambda * (_kpj *_x_err_hand + _kdj * _xdot_err_hand ) + _torqueForce + Model._bg ;
+
+	for (int i=0; i< 6; i++){
+			log(i) = _x_des_hand(i);
+			log(i+6) = _x_hand(i);
+	}
+	fout.open("/home/kist/euncheol/Dual-arm/data/Sim_data/panda_qddot.txt",ios::app);
+	fout << log.transpose() <<endl;
+	fout.close();
+
+}
+void CController::TankControl()
+{
+	_lambda =  CustomMath::pseudoInverseQR(_J_hands.transpose())*Model._A*_J_bar_hands;
+	_Null_hands = _Id_7 - _J_T_hands * _lambda * _J_hands * Model._A.inverse();
+
+	_x_err_hand.segment(0,3) = _x_des_hand.head(3) - _x_hand.head(3);
+	_x_err_hand.segment(3,3) = -CustomMath::getPhi(Model._R_hand, _R_des_hand);
+	
+	_xdot_err_hand.segment(0, 3) = _xdot_des_hand.head(3) - _xdot_hand.head(3);
+	_xdot_err_hand.segment(3, 3) = -_xdot_hand.tail(3);
+
+	_Force_error = (_FTdata - _F_desired );
+	_int_F_desired_ = _int_F_desired_ + _Force_error*_dt;
+
+	_torqueForce = _J_T_hands * (_kpf*_Force_error + _kif*_int_F_desired_);
 	// _torque = _J_T_hands * _lambda * (_kpj *_x_err_hand + _kdj * _xdot_err_hand ) + _torqueForce + Model._bg ;
 
-	F_temp =  _lambda * (_kpj *_x_err_hand + _kdj * _xdot_err_hand ) + _kpf*_Force_error + _kif*_int_F_desired_ + CustomMath::pseudoInverseQR(_J_hands.transpose())*Model._bg;
+	// F_temp =  _lambda * (_kpj *_x_err_hand + _kdj * _xdot_err_hand ) + _kpf*_Force_error + _kif*_int_F_desired_ + CustomMath::pseudoInverseQR(_J_hands.transpose())*Model._bg;
 
+	F_temp = _kpf*_Force_error + _kif*_int_F_desired_;
 	_modify_xdot_des_hands = VirtualTank(_xdot_hand, _xdot_des_hand, _FTdata, F_temp, _gamma);
+	_gamma = ValveGainScheduler(_Power_t, _gamma, _E_t);
 
-	// _modify_x_des_hands = _x_hand + _modify_xdot_des_hands * _dt;
+	// _gamma<<1,1,1;
 
-	_modify_x_des_hands = _modify_x_des_hands + _modify_xdot_des_hands * _dt;
+	cout << "----------------------------------------------------------" << endl;
 
-	_m_R_des_hand = CustomMath::GetBodyRotationMatrix(_modify_x_des_hands(3), _modify_x_des_hands(4), _modify_x_des_hands(5));
+	// _torque = _J_T_hands * _lambda * (_kpj *_x_err_hand + _kdj * _xdot_err_hand ) + _J_T_hands*_modify_xdot_des_hands + Model._bg ;
+	_torque = _J_T_hands * _lambda * (_kpj *_x_err_hand + _kdj * _xdot_err_hand ) + _torqueForce + Model._bg ;
 
-	_m_x_err.segment(0,3) = _modify_x_des_hands.head(3) - _x_hand.head(3);
-	_m_x_err.segment(3,3) = -CustomMath::getPhi(Model._R_hand, _m_R_des_hand);
-
-	_m_xdot_err.segment(0,3) = _modify_xdot_des_hands.head(3) - _xdot_hand.head(3);
-	_m_xdot_err.segment(3,3) =  - _xdot_hand.tail(3);
+	// _torque = _J_T_hands*_modify_xdot_des_hands + ;
 
 
-	// cout << "_modify_x_des_hands: "<<_modify_x_des_hands.transpose()<<endl;
-
-	////////////////////////////////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////////////////////////////////
-
-	// _gamma = ValveGainScheduler(_Power_in, _P_total, _gamma, _E_t);
-
-	// cout << _FTdata.transpose() << endl;
-	// cout << (CustomMath::pseudoInverseQR(_J_T_hands.transpose())*_torque).transpose() << endl;
-	// cout << _gamma.transpose() << endl;
-	cout << "mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm" << endl;
-	// std::cout << "_Force_error: "<<_Force_error.transpose()<<std::endl;
-
-	// s_dot = _xdot_hand.transpose() * _F_desired;
-	// s_dot -=_xdot_des_hand.transpose() * _F_desired ;
-	// s_dot -= _xdot_des_hand.transpose() * _FTdata;
-	// s = s +s_dot*_dt;
-	// cout <<s <<endl; 
-	// _torque = _J_T_hands * _lambda * (_kpj *_x_err_hand + _kdj * _xdot_err_hand ) + _torqueForce + Model._bg ;
-// 
-	_torque = _J_T_hands * _lambda * (_kpj *_m_x_err + _kdj * _m_xdot_err ) + _torqueForce + Model._bg ;
-
-	cout << "  _xdot_des_hand: "<<_xdot_des_hand.transpose()<<endl;
-	cout << "_modify_des_hand: "<<_modify_xdot_des_hands.transpose()<<endl<<endl;
-
-	cout << "     _x_des_hand: "<<_x_des_hand.transpose()<<endl;
-	cout << "_modify_des_hand: "<<_modify_x_des_hands.transpose()<<endl<<endl;
-
-	cout << "error: "<<_x_err_hand.transpose()<<endl;
-	cout << "m_error: "<<_m_x_err.transpose()<<endl;
-	// _torque = _J_T_hands * _lambda * (_kpj *_x_err_hand + _kdj * _xdot_err_hand ) + Model._bg ;
+	// cout << "_torque: "<<_torque.transpose()<<endl;
 
 	for (int i=0; i< 6; i++){
 			log(i) = _x_des_hand(i);
@@ -526,7 +490,6 @@ void CController::OperationalSpaceControl()
 	fout.open("/home/kist/euncheol/Dual-arm/data/Sim_data/panda_qddot.txt",ios::app);
 	fout << log.transpose() <<endl;
 	fout.close();
-
 }
 VectorXd CController::ControlBarrierFunction(const VectorXd q, const VectorXd q_min, const VectorXd q_max)
 {
@@ -595,7 +558,7 @@ void CController::Initialize()
     _control_mode = 1; //1: joint space, 2: task space(CLIK)
 
 	Eigen::VectorXd param;
-    param.setZero(2);
+    param.setZero(4);
 	ParticleYamlRead("../libs/param.yaml", param);
 	_state_x = 0;
 	_gamma << 1.0, 1.0, 1.0;
@@ -605,14 +568,17 @@ void CController::Initialize()
 
 	_m_x_err.setZero(6);
 	_m_xdot_err.setZero(6);
+	_kpf.setZero(6,6); 
+	_kif.setZero(6,6);
+	_kpf.diagonal() << param(0),param(0),param(0),param(1),param(1),param(1);
+	_kif.diagonal() << param(2),param(2),param(2),param(3),param(3),param(3);
 
-	_kpf = param(0); _kif = param(1);
 	_p_up_re.setZero(3);
 	_p_low_re<< -2,-2,-2;
 	_P_up = 0.0; _P_low = -10.0;
-	_E_up = 120; _E_low = 1;
+	_E_up = 120; _E_low = 50;
 	E_threshold = 0.5;
-	_E_t = _E_low;
+	_E_t = _E_low+0.1;
 	_Total_storage = 0.0;
 
 	_state_x = sqrt(2*_E_low); // predefined lower limit of energy E_low that you want the system to start

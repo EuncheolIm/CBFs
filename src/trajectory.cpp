@@ -451,6 +451,7 @@ Matrix3d HTrajectory::rotationCubic()
 	Matrix3d rot_scaler_skew;
 	rot_scaler_skew = (rotation_0.transpose() * rotation_f).log();
 	Matrix3d result = rotation_0 * (rot_scaler_skew * tau).exp();
+
 	return result;
 }
 

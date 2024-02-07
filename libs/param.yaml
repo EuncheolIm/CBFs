@@ -1,4 +1,6 @@
 Impedance_gain:
 
-  kpf: 100.0
-  kif: 10.0
+  kpf_Tr: 5.0
+  kpf_Ro: 1.0
+  kif_Tr: 0.5
+  kif_Ro: 0.1
